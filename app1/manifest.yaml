@@ -42,3 +42,30 @@ spec:
     protocol: TCP
     port: 80 # service port
     targetPort: 80 # container port
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+    name: app1
+    namespace: expense
+    annotations:
+        alb.ingress.kubernetes.io/scheme: internet-facing
+        alb.ingress.kubernetes.io/target-type: ip
+        alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:253490795749:certificate/41e85acf-9882-4559-8cc5-92e72d6cd50e
+        alb.ingress.kubernetes.io/tags: Environment=dev,Team=test
+        alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+        alb.ingress.kubernetes.io/group.name: expense 
+
+spec:
+    ingressClassName: alb
+    rules:
+    - host: "app1.hraje.online"
+      http:
+       paths:
+       - pathType: Prefix
+         path: "/"
+         backend:
+          service:
+            name: app1
+            port:
+              number: 80
