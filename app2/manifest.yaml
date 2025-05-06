@@ -1,0 +1,71 @@
+
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app2
+  labels: # these are replicaset labels
+    app: app2
+    tier: frontend
+spec:
+  # modify replicas according to your case
+  replicas: 1
+  selector:
+    # these are used to select the pod to create replicas
+    matchLabels:
+      tier: frontend
+      app: app2
+  # this is pod definition
+  template:
+    metadata:
+      # these labels belongs to pod
+      labels:
+        tier: frontend
+        app: app2
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:stable-perl
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: app2
+spec:
+  selector:
+    tier: frontend
+    app: app2
+  ports:
+  - name: nginx-svc-port
+    protocol: TCP
+    port: 80 # service port
+    targetPort: 80 # container port
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+    name: app2
+    namespace: expense
+    annotations:
+        alb.ingress.kubernetes.io/scheme: internet-facing
+        alb.ingress.kubernetes.io/target-type: ip
+        alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:253490795749:certificate/41e85acf-9882-4559-8cc5-92e72d6cd50e
+        alb.ingress.kubernetes.io/tags: Environment=dev,Team=test
+        alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+        alb.ingress.kubernetes.io/group.name: expense 
+
+spec:
+    ingressClassName: alb
+    rules:
+    - host: "app2.hraje.online"
+      http:
+       paths:
+       - pathType: Prefix
+         path: "/"
+         backend:
+          service:
+            name: app2
+            port:
+              number: 80
